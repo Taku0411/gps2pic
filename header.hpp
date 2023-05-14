@@ -12,3 +12,6 @@ class IMGInfo
   std::string altitude;
   std::string longigutde;
 };
+
+std::vector<fs::path> arg2path(int argc, char *argv[]);
+void read_date(Exiv2::Image::UniquePtr image);

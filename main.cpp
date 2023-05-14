@@ -1,7 +1,6 @@
 #include "header.hpp"
 
 
-std::vector<fs::path> arg2path(int argc, char *argv[]);
 
 int main(int argc, char *argv[])
 {
