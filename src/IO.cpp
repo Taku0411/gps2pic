@@ -1,3 +1,4 @@
+#include "date/date.h"
 #include "header.hpp"
 
 std::vector<fs::path> arg2path(int argc, char *argv[])
@@ -16,3 +17,4 @@ std::vector<fs::path> arg2path(int argc, char *argv[])
   }
   return result;
 }
+

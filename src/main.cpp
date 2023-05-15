@@ -1,10 +1,24 @@
 #include "header.hpp"
 
 
-
 int main(int argc, char *argv[])
 {
+
+
+	get_unix_time("2014-11-12T19:12:14.505Z");
+
+
+	exit(1);
+  // get path list of image files
   auto paths = arg2path(argc, argv);
+
+  // load Records.json and parse file
+	std::ifstream f("Records.json");
+  auto jobj = json::parse(f);
+	auto locations = jobj["locations"];
+	for(auto loc:locations) std::cout << loc << std::endl;
+
+
   for (auto &item: paths)
   {
     if (item.extension() == ".jpeg") {}
