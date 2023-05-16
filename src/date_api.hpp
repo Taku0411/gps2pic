@@ -9,21 +9,32 @@
 #include <date/tz.h>
 #include <sstream>
 
+
+using tf = date::sys_time<std::chrono::seconds>;
 namespace date_api
 {
 
   class time
   {
   public:
-    time();
-    time(const std::string &iso8601)
+    time(const std::string &iso8601, const std::string &fmt)
     {
       std::istringstream input(iso8601);
-      input >> date::parse("%FT%T", tp);
+      input >> date::parse(fmt, tp);
+      std::cout << tp.time_since_epoch().count() << std::endl;
+      using namespace date;
+      std::cout << date::format("%a, %b %d, %Y at %T %Z", tp) << std::endl;
       //std::cout << tp.time_since_epoch().count() << std::endl;
     };
 
-    void getUnix() { std::cout << date::make_zoned(date::current_zone(), tp); }
+    void applyTimeZoneM(int minute)
+    {
+      std::cout << date::format("%a, %b %d, %Y at %T %Z", tp) << std::endl;
+      tp = tp - std::chrono::seconds(60 * minute);
+      std::cout << date::format("%a, %b %d, %Y at %T %Z", tp) << std::endl;
+      std::cout << tp.time_since_epoch().count() << std::endl;
+    }
+
     auto getUnixTime() { return tp.time_since_epoch().count(); }
 
 
@@ -31,21 +42,10 @@ namespace date_api
     bool operator<(const time &right) { return tp < right.tp; };
 
 
-    date::sys_seconds tp;
+    tf tp;
   };
 
-  inline time closest(std::vector<time> &vec, time &key)
-  {
-    time result("3000-01-01T00:00:00.000Z");
-    auto key_time = key.getUnixTime();
-    for (auto i: vec)
-    {
-      if (std::fabs(key.getUnixTime() - i.getUnixTime()) < result.getUnixTime())
-        result = i;
-    }
-    return result;
-  };
 
-//Exif.Photo.OffsetTimeOriginal: iPhone+9
+  //Exif.Photo.OffsetTimeOriginal: iPhone+9
 
 }  // namespace date_api
