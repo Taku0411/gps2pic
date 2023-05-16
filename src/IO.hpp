@@ -1,4 +1,4 @@
-#include "date/date.h"
+#pragma once
 #include "header.hpp"
 
 std::vector<fs::path> arg2path(int argc, char *argv[])
@@ -7,7 +7,7 @@ std::vector<fs::path> arg2path(int argc, char *argv[])
   for (size_t i = 1; i < argc; i++)
   {
     auto tmp = fs::path(argv[i]);
-		std::cout << tmp << std::endl;
+		//std::cout << tmp << std::endl;
     if (!fs::exists(tmp))
     {
       std::cerr << "no such file or directory: " << tmp << std::endl;
