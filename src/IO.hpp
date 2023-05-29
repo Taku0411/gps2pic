@@ -1,13 +1,14 @@
 #pragma once
 #include "header.hpp"
 
-std::vector<fs::path> arg2path(int argc, char *argv[])
+template <typename T>
+std::vector<fs::path> arg2path(T &args)
 {
   std::vector<fs::path> result;
-  for (size_t i = 1; i < argc; i++)
+  for (auto &i: args)
   {
-    auto tmp = fs::path(argv[i]);
-		//std::cout << tmp << std::endl;
+    auto tmp = fs::path(i);
+    //std::cout << tmp << std::endl;
     if (!fs::exists(tmp))
     {
       std::cerr << "no such file or directory: " << tmp << std::endl;
@@ -17,4 +18,3 @@ std::vector<fs::path> arg2path(int argc, char *argv[])
   }
   return result;
 }
-

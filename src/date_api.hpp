@@ -4,48 +4,62 @@
 #include <ctime>
 #include <iomanip>
 #include <iostream>
-
-#include <date/date.h>
-#include <date/tz.h>
 #include <sstream>
 
+#include "header.hpp"
 
-using tf = date::sys_time<std::chrono::seconds>;
+
 namespace date_api
 {
 
   class time
   {
   public:
-    time(const std::string &iso8601, const std::string &fmt)
+    time(){};
+    time(const std::string &time, const std::string &fmt)
     {
-      std::istringstream input(iso8601);
+      std::istringstream input(time);
       input >> date::parse(fmt, tp);
-      std::cout << tp.time_since_epoch().count() << std::endl;
-      using namespace date;
-      std::cout << date::format("%a, %b %d, %Y at %T %Z", tp) << std::endl;
+      //std::cout << tp.time_since_epoch().count() << std::endl;
+      //std::cout << date::format("%a, %b %d, %Y at %T %Z", tp) << std::endl;
       //std::cout << tp.time_since_epoch().count() << std::endl;
     };
 
     void applyTimeZoneM(int minute)
     {
-      std::cout << date::format("%a, %b %d, %Y at %T %Z", tp) << std::endl;
+      std::cout << "EXIF local timestamp "
+                << date::format("%a, %b %d, %Y at %T %Z", tp) << std::endl;
       tp = tp - std::chrono::seconds(60 * minute);
-      std::cout << date::format("%a, %b %d, %Y at %T %Z", tp) << std::endl;
-      std::cout << tp.time_since_epoch().count() << std::endl;
+      std::cout << "EXIF UTC   timestamp "
+                << date::format("%a, %b %d, %Y at %T %Z", tp) << std::endl;
     }
 
     auto getUnixTime() { return tp.time_since_epoch().count(); }
 
+    int getTime() { return tp.time_since_epoch().count(); }
+
 
     bool operator>(const time &right) { return tp > right.tp; };
     bool operator<(const time &right) { return tp < right.tp; };
-
+    auto operator-(const time &right) { return tp - right.tp; }
 
     tf tp;
   };
 
+  inline time getTime(Exiv2::ExifData &exifData)
+  {
+    if (exifData["Exif.Photo.DateTimeOriginal"].count() != 0)
+    {
+      std::string time = exifData["Exif.Photo.DateTimeOriginal"].toString();
+      date_api::time t(time, "%Y:%m:%d %T");
+      return t;
+    }
+    else
+    {
+      std::cout << "time stamp not found" << std::endl;
+      std::exit(1);
+    }
+  };
 
-  //Exif.Photo.OffsetTimeOriginal: iPhone+9
 
 }  // namespace date_api
