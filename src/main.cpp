@@ -18,6 +18,9 @@ int main(int argc, char **argv)
           .help("dry run")
           .default_value(false)
           .implicit_value(true);
+  program.add_argument("-j", "--json")
+          .default_value("./Records.json")
+          .help("path to the Records.json");
   try
   {
     program.parse_args(argc, argv);
@@ -28,13 +31,15 @@ int main(int argc, char **argv)
     std::cerr << program;
     std::exit(1);
   }
-  bool dry_run = program.get<bool>("d");
-  auto paths = arg2path(program.get<std::vector<std::string>>("-i"));
+  bool dry_run = program.get<bool>("-d");
+  auto arg_paths = program.get<std::vector<std::string>>("-i");
+  auto paths = arg2path(arg_paths);
 
   // check existense of Records.json
   std::cout << "Opening Records.json ... ";
   std::fflush(stdout);
-  if (!fs::exists("Records.json"))
+  auto json_path = fs::path(program.get<std::string>("-j"));
+  if (!fs::exists(json_path))
   {
     std::cout << "Records.json not found" << std::endl;
     std::abort();
@@ -87,7 +92,7 @@ int main(int argc, char **argv)
       fs::path jpg = ".." / item.replace_extension("JPG");
       if (fs::exists(jpg))
       {
-        Exiv2::Image::UniquePtr image_jpg = Exiv2::ImageFactory::open(jpg);
+        //Exiv2::Image::UniquePtr image_jpg = Exiv2::ImageFactory::open(jpg);
         image->readMetadata();
         Exiv2::ExifData &exifData_jpg = image->exifData();
         if (!dry_run) loc.overwrite_geo(image, exifData_jpg);
