@@ -15,7 +15,7 @@ int main(int argc, char **argv)
           .nargs(argparse::nargs_pattern::at_least_one)
           .help("specity input directory");
   program.add_argument("-d", "--dry")
-          .help("dry run")
+          .help("dry run: not writing meta data, only showing estimated results")
           .default_value(false)
           .implicit_value(true);
   program.add_argument("-j", "--json")
@@ -38,7 +38,7 @@ int main(int argc, char **argv)
   // check existense of Records.json
   std::cout << "Opening Records.json ... ";
   std::fflush(stdout);
-  auto json_path = fs::path(program.get<std::string>("-j"));
+  auto json_path = fs::canonical(fs::path(program.get<std::string>("-j")));
   if (!fs::exists(json_path))
   {
     std::cout << "Records.json not found" << std::endl;
@@ -48,9 +48,9 @@ int main(int argc, char **argv)
 
   // load Records.json and parse file
   std::cout << "Parsing Records.json ... ";
+  std::ifstream json_str(json_path);
   std::fflush(stdout);
-  std::ifstream f("Records.json");
-  auto jobj = json::parse(f);
+  auto jobj = json::parse(json_str);
   auto locations = jobj["locations"];
   std::cout << "OK" << std::endl;
 
@@ -60,7 +60,7 @@ int main(int argc, char **argv)
   {
     std::cout << item << std::endl;
     // check extension
-    if (item.extension() == ".CR2")
+    if (item.extension() == ".CR2" || item.extension() == ".JPG")
     {
       // print
       std::cout << std::string(69, '-') << std::endl;
@@ -79,24 +79,15 @@ int main(int argc, char **argv)
 
       // get timezone and convert to unix time
       auto time_zone = exiv2_api::getTimeZoneCR2(exifData);
-      time.applyTimeZoneM(time_zone);
+      time.applyTimeZoneM(time_zone, false);
 
       // search closes time
       auto loc = geo::getGeo(time, locations);
-      std::cout << "result" << std::endl;
       std::cout << loc << std::endl;
 
+      // if not dry run
       if (!dry_run) loc.overwrite_geo(image, exifData);
 
-      // also overwrite JPG in upper directory
-      fs::path jpg = ".." / item.replace_extension("JPG");
-      if (fs::exists(jpg))
-      {
-        //Exiv2::Image::UniquePtr image_jpg = Exiv2::ImageFactory::open(jpg);
-        image->readMetadata();
-        Exiv2::ExifData &exifData_jpg = image->exifData();
-        if (!dry_run) loc.overwrite_geo(image, exifData_jpg);
-      }
     }
   }
   return 0;

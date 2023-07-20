@@ -25,13 +25,16 @@ namespace date_api
       //std::cout << tp.time_since_epoch().count() << std::endl;
     };
 
-    void applyTimeZoneM(int minute)
+    void applyTimeZoneM(int minute, bool out=true)
     {
-      std::cout << "EXIF local timestamp "
-                << date::format("%a, %b %d, %Y at %T %Z", tp) << std::endl;
       tp = tp - std::chrono::seconds(60 * minute);
-      std::cout << "EXIF UTC   timestamp "
-                << date::format("%a, %b %d, %Y at %T %Z", tp) << std::endl;
+      if (out)
+      {
+        std::cout << "EXIF local timestamp "
+                  << date::format("%a, %b %d, %Y at %T %Z", tp) << std::endl;
+        std::cout << "EXIF UTC   timestamp "
+                  << date::format("%a, %b %d, %Y at %T %Z", tp) << std::endl;
+      }
     }
 
     auto getUnixTime() { return tp.time_since_epoch().count(); }

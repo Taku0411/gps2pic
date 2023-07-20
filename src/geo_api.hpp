@@ -89,13 +89,10 @@ namespace geo
 
   std::ostream &operator<<(std::ostream &stream, const geo &geo)
   {
-    stream << std::format("{}\nlatitude: {:3.7f}, longitude: {:3.7f}, "
-                          "altitude: {:3.7f}, "
-                          "accuracy: {}",
-                          date::format("%a, %b %d, %Y at %T %Z", geo.time.tp),
-                          geo.latitudeE7_, geo.longitudeE7_, geo.altitude_,
-                          geo.accuracy_)
-           << std::endl;
+    stream << std::format("{}, accurate: {}",
+                          date::format("%a,%b%d,%Y at %T %Z", geo.time.tp),
+                          geo.accuracy_);
+
     return stream;
   }
 
