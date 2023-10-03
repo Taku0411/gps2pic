@@ -79,7 +79,35 @@ int main(int argc, char **argv)
 
       // get timezone and convert to unix time
       auto time_zone = exiv2_api::getTimeZoneCR2(exifData);
-      time.applyTimeZoneM(time_zone, false);
+      time.applyTimeZoneM(time_zone, true);
+
+      // search closes time
+      auto loc = geo::getGeo(time, locations);
+      std::cout << loc << std::endl;
+
+      // if not dry run
+      if (!dry_run) loc.overwrite_geo(image, exifData);
+
+    }
+    else if (item.extension() == ".JPG")
+    {
+      // print
+      std::cout << std::string(69, '-') << std::endl;
+      std::cout << item << std::endl;
+
+      // construct
+      date_api::time time;
+
+      // read image data
+      Exiv2::Image::UniquePtr image = Exiv2::ImageFactory::open(item.string());
+      image->readMetadata();
+      Exiv2::ExifData &exifData = image->exifData();
+
+      // get time from exif data
+      time = date_api::getTime(exifData);
+
+      // get timezone and convert to unix time
+      time.applyTimeZoneM(540, true);
 
       // search closes time
       auto loc = geo::getGeo(time, locations);
