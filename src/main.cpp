@@ -1,9 +1,7 @@
-#include "IO.hpp"
-#include "date_api.hpp"
-#include "exiv2_api.hpp"
-#include "geo_api.hpp"
-#include "header.hpp"
+#include "location_history.hpp"
 #include <argparse/argparse.hpp>
+#include <exiv2_api.hpp>
+#include <geo_api.hpp>
 
 
 int main(int argc, char **argv)
@@ -15,12 +13,19 @@ int main(int argc, char **argv)
           .nargs(argparse::nargs_pattern::at_least_one)
           .help("specity input directory");
   program.add_argument("-d", "--dry")
-          .help("dry run: not writing meta data, only showing estimated results")
+          .help("dry run: not writing meta data, only showing estimated "
+                "results")
           .default_value(false)
           .implicit_value(true);
   program.add_argument("-j", "--json")
           .default_value("./Records.json")
           .help("path to the Records.json");
+  program.add_argument("-t", "--timezone")
+          .default_value(9)
+          .implicit_value(9)
+          .help("time difference between UTC. default is 9hours (JST). If exif "
+                "data contains timezone information, this value will be "
+                "ignored.");
   try
   {
     program.parse_args(argc, argv);
@@ -31,12 +36,26 @@ int main(int argc, char **argv)
     std::cerr << program;
     std::exit(1);
   }
+
+  // get arguments
   bool dry_run = program.get<bool>("-d");
   auto arg_paths = program.get<std::vector<std::string>>("-i");
-  auto paths = arg2path(arg_paths);
+  auto timezone = program.get<int>("-t");
 
-  // check existense of Records.json
-  std::cout << "Opening Records.json ... ";
+  // get the vector of input path(s)
+  std::vector<fs::path> paths;
+  for (auto &i: arg_paths)
+  {
+    auto tmp = fs::path(i);
+    if (!fs::exists(tmp))
+    {
+      std::cerr << "no such file or directory: " << tmp << std::endl;
+      std::abort();
+    }
+    paths.push_back(tmp);
+  }
+
+  // check existence of location-history.json
   std::fflush(stdout);
   auto json_path = fs::canonical(fs::path(program.get<std::string>("-j")));
   if (!fs::exists(json_path))
@@ -44,16 +63,9 @@ int main(int argc, char **argv)
     std::cout << "Records.json not found" << std::endl;
     std::abort();
   }
-  std::cout << "OK" << std::endl;
 
-  // load Records.json and parse file
-  std::cout << "Parsing Records.json ... ";
-  std::ifstream json_str(json_path);
-  std::fflush(stdout);
-  auto jobj = json::parse(json_str);
-  auto locations = jobj["locations"];
-  std::cout << "OK" << std::endl;
-
+  // parse Records.json
+  auto data = parse_json(json_path);
 
   // file loop for items
   for (auto &item: paths)
@@ -66,56 +78,25 @@ int main(int argc, char **argv)
       std::cout << std::string(69, '-') << std::endl;
       std::cout << item << std::endl;
 
-      // construct
-      date_api::time time;
-
       // read image data
       Exiv2::Image::UniquePtr image = Exiv2::ImageFactory::open(item.string());
       image->readMetadata();
       Exiv2::ExifData &exifData = image->exifData();
 
-      // get time from exif data
-      time = date_api::getTime(exifData);
+      // time
+      std::chrono::sys_seconds time = exiv2_api::getTime(exifData);
+      std::cout << "original local time:" << time << std::endl;
 
-      // get timezone and convert to unix time
-      auto time_zone = exiv2_api::getTimeZoneCR2(exifData);
-      time.applyTimeZoneM(time_zone, true);
+      // get timezone if exists and convert to unix time
+      auto exiftimezone = exiv2_api::getTimeZoneCR2(exifData);
+      if (exiftimezone != -1000) timezone = exiftimezone;
+      time -= std::chrono::hours(timezone);
+      std::cout << "original UTC" << time << std::endl;
 
-      // search closes time
-      auto loc = geo::getGeo(time, locations);
-      std::cout << loc << std::endl;
+      // search interpolated time
+      auto interpolated = geo::getInterpolatedGPSData(time, data);
 
-      // if not dry run
-      if (!dry_run) loc.overwrite_geo(image, exifData);
-
-    }
-    else if (item.extension() == ".JPG")
-    {
-      // print
-      std::cout << std::string(69, '-') << std::endl;
-      std::cout << item << std::endl;
-
-      // construct
-      date_api::time time;
-
-      // read image data
-      Exiv2::Image::UniquePtr image = Exiv2::ImageFactory::open(item.string());
-      image->readMetadata();
-      Exiv2::ExifData &exifData = image->exifData();
-
-      // get time from exif data
-      time = date_api::getTime(exifData);
-
-      // get timezone and convert to unix time
-      time.applyTimeZoneM(540, true);
-
-      // search closes time
-      auto loc = geo::getGeo(time, locations);
-      std::cout << loc << std::endl;
-
-      // if not dry run
-      if (!dry_run) loc.overwrite_geo(image, exifData);
-
+      std::cout << "interpolated UTC" << interpolated << std::endl;
     }
   }
   return 0;
