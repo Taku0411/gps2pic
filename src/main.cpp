@@ -15,14 +15,12 @@ int main(int argc, char **argv)
           .default_value(false)
           .implicit_value(true);
   program.add_argument("-j", "--json")
-          .default_value("./Records.json")
-          .help("path to the Records.json");
+          .required()
+          .default_value("./location-history.json")
+          .help("path to the location-history.json");
   program.add_argument("-t", "--timezone")
           .default_value(9)
-          .implicit_value(9)
-          .help("time difference between UTC. default is 9hours (JST). If exif "
-                "data contains timezone information, this value will be "
-                "ignored.");
+          .help("time difference by UTC. default is +9 hours (JST).");
   try
   {
     program.parse_args(argc, argv);
