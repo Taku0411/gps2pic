@@ -47,11 +47,11 @@ int main(int argc, char **argv)
 
   // check existence of location-history.json
   std::fflush(stdout);
-  auto json_path = fs::canonical(fs::path(program.get<std::string>("-j")));
+  auto json_path = fs::weakly_canonical(fs::path(program.get<std::string>("-j")));
   if (!fs::exists(json_path))
   {
-    std::cout << "location-history.json not found" << std::endl;
-    std::abort();
+    throw std::runtime_error("location-history.json not found");
+    std::exit(1);
   }
 
   // parse Records.json

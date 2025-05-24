@@ -6,13 +6,16 @@ Suppors new format of Google GPS data `location_history.json`.
 - JPG
 
 ## build environment
-- MSVC 17.
+- MSVC 17(tested)
 ## dependencies
-- `exiv2` (and expat as its dependency)
-- `nlohmann_json`
-- `argparse`
-note that all libaries can be installed via vcpkg
-Much work would be required for builing exiv2 on windows. 
+In windows, recomend installing them via vcpkg, otherwise you would spend much time to build exiv2. Triplets are in parences.
+- `exiv2(exiv2:x64-windows)` 
+   - `expat(expat:x64-windows)`
+   - `inih(inih:x64-windows)`
+- `nlohmann_json(nlohmann-json:x64-windows)`
+- `argparse(argparse:x64-windows)`
+- `date(date:x64-windows)`  
+
 
 ## how to use
 1. Get `location_history.json` from your Smart phone and transfer it to PC.

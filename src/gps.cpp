@@ -148,7 +148,7 @@ namespace gps
     }
     else
     {
-      std::cout << "time stamp not found" << std::endl;
+      throw std::runtime_error("time stamp not found");
       std::exit(1);
     }
   }
